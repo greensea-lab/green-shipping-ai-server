@@ -30,6 +30,9 @@ Green Shipping AI Server는 **초보 개발자를 위한 완벽한 FastAPI 백�
 
 # Python 설치
 brew install python
+
+# Make 설치 (필요한 경우)
+brew install make
 ```
 
 #### Windows 사용자
@@ -37,18 +40,36 @@ brew install python
    - [Python 공식 사이트](https://www.python.org/downloads/)에서 최신 버전 다운로드
    - 설치 시 "Add Python to PATH" 체크박스 반드시 선택
 
+2. **Make 설치**
+   - **방법 1: Chocolatey 사용 (권장)**
+     ```powershell
+     # Chocolatey 설치 후
+     choco install make
+     ```
+   - **방법 2: WSL 사용**
+     ```bash
+     # WSL에서 Ubuntu 설치 후
+     sudo apt install make
+     ```
+   - **방법 3: Git Bash 사용**
+     - Git for Windows 설치 시 함께 설치됨
+
 #### Linux 사용자 (Ubuntu/Debian)
 ```bash
 sudo apt update
-sudo apt install python3 python3-pip python3-venv
+sudo apt install python3 python3-pip python3-venv make
 ```
 
 ### 2. 설치 확인
 
 ```bash
+# Python 확인
 python3 --version
 # 또는
 python --version
+
+# Make 확인
+make --version
 ```
 
 ## 🚀 1단계: 개발 환경 설정
