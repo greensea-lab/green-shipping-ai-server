@@ -65,8 +65,8 @@ cd green-shipping-ai-server
 # 2. 개발 환경 자동 설정
 make setup
 
-# 3. 테스트 서버 실행
-make dev-test
+# 3. 로컬 서버 실행
+make local
 
 # 4. API 테스트
 make test
@@ -274,17 +274,12 @@ curl http://localhost:8000/api/v1/products/
 # 📋 기본 명령어
 make help          # 사용 가능한 명령어 확인
 make setup         # 개발 환경 초기 설정
-make dev           # 개발 서버 실행 (MySQL)
-make dev-test      # 테스트 서버 실행 (SQLite)
+make local         # 로컬 개발 서버 실행 (SQLite)
+make dev           # 개발 환경 서버 실행 (원격 MySQL)
+make prod          # 프로덕션 환경 서버 실행 (원격 MySQL)
 make test          # API 테스트
 make status        # 서버 상태 확인
 make clean         # 가상환경 삭제
-
-# 📦 의존성 관리
-make install-package PACKAGE=name     # 새 패키지 설치
-make install-dev-package PACKAGE=name # 개발용 패키지 설치
-make uninstall-package PACKAGE=name   # 패키지 제거
-make update-deps                      # 의존성 업데이트
 
 # 🗄️  데이터베이스
 make migrate                          # 로컬 마이그레이션 적용 (SQLite)
@@ -292,16 +287,12 @@ make migrate-dev                      # 개발 환경 마이그레이션 적용 
 make migrate-prod                     # 프로덕션 마이그레이션 (보안상 제한)
 make migrate-create MESSAGE='설명'    # 새 마이그레이션 생성
 
-# 🎨 코드 품질
-make format                           # 코드 포맷팅
-make lint                             # 코드 품질 검사
-make test-run                         # 테스트 실행
-
 # 🔐 GitHub Push
 make push-with-pat                    # PAT를 사용하여 GitHub에 Push
 make push-with-pat-saved              # 저장된 PAT를 사용하여 Push
 make setup-github-pat                 # GitHub PAT 초기 설정
 make check-github-user                # GitHub 사용자 정보 확인
+make check-env                        # 환경별 설정 확인
 ```
 
 ### 새로운 기능 추가하기
@@ -402,14 +393,16 @@ make install-deps
 #### 📝 수동으로 패키지 추가
 
 ```bash
-# 새 패키지 설치 (자동으로 requirements.txt 업데이트)
-make install-package PACKAGE=package_name
+# 가상환경 활성화 후 pip 사용
+source venv/bin/activate
+pip install package_name
+pip freeze > requirements.txt
+```
 
-# 개발용 패키지 설치
-make install-dev-package PACKAGE=pytest
+#### 📦 의존성 관리 명령어
 
-# 패키지 제거
-make uninstall-package PACKAGE=package_name
+```bash
+make install-deps    # requirements.txt에서 패키지 설치
 ```
 
 ## 📁 프로젝트 구조
