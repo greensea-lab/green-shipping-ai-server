@@ -7,7 +7,7 @@ from app.models.user import User as UserModel
 
 router = APIRouter()
 
-
+print("hello")
 @router.get("/", response_model=List[User])
 def get_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     """Get all users"""
