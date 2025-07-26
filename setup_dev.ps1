@@ -78,19 +78,42 @@ Write-Step "필요한 패키지들을 설치합니다..."
 pip install -r requirements.txt
 Write-Success "모든 패키지가 설치되었습니다."
 
-# 6. 환경 변수 파일 확인
-Write-Step "환경 변수 파일을 확인합니다..."
+# 6. 환경별 설정 파일 확인
+Write-Step "환경별 설정 파일을 확인합니다..."
+
+# 환경별 설정 파일 존재 여부 확인
+if (Test-Path "env.local") {
+    Write-Success "로컬 환경 설정 파일 (env.local)이 존재합니다."
+}
+
+if (Test-Path "env.dev") {
+    Write-Success "개발 환경 설정 파일 (env.dev)이 존재합니다."
+}
+
+if (Test-Path "env.production") {
+    Write-Success "프로덕션 환경 설정 파일 (env.production)이 존재합니다."
+}
+
+# 기본 .env 파일 설정 (로컬 환경으로 초기화)
 if (-not (Test-Path ".env")) {
-    if (Test-Path "env.example") {
+    if (Test-Path "env.local") {
+        Copy-Item "env.local" ".env"
+        Write-Success "로컬 환경 설정으로 .env 파일이 생성되었습니다."
+    } elseif (Test-Path "env.example") {
         Copy-Item "env.example" ".env"
-        Write-Warning ".env 파일이 생성되었습니다. 데이터베이스 설정을 확인해주세요."
+        Write-Warning ".env 파일이 생성되었습니다. 환경별 설정을 확인해주세요."
     } else {
-        Write-Error "env.example 파일을 찾을 수 없습니다."
+        Write-Error "환경 설정 파일을 찾을 수 없습니다."
         exit 1
     }
 } else {
     Write-Success ".env 파일이 이미 존재합니다."
 }
+
+Write-Step "환경별 서버 실행 방법:"
+Write-Host "  - 로컬 환경: make local (SQLite 사용)" -ForegroundColor White
+Write-Host "  - 개발 환경: make dev (원격 MySQL 사용)" -ForegroundColor White
+Write-Host "  - 프로덕션 환경: make prod (원격 MySQL 사용)" -ForegroundColor White
 
 # 7. IDE 설정 파일 생성
 Write-Step "IDE 설정 파일을 생성합니다..."

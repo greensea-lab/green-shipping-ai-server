@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     mysql_password: str = "password"
     mysql_database: str = "green_shipping_db"
     
+    # Environment
+    environment: Optional[str] = None
+    
     class Config:
         env_file = ".env"
         case_sensitive = False

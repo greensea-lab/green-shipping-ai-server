@@ -28,8 +28,10 @@ if ($env:VIRTUAL_ENV) {
     Write-Host "📦 pip 경로: $(Get-Command pip | Select-Object -ExpandProperty Source)" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "📋 사용 가능한 명령어:" -ForegroundColor Yellow
-    Write-Host "  .\dev.ps1        # 개발 서버 실행" -ForegroundColor White
-    Write-Host "  .\test_api.ps1   # API 테스트" -ForegroundColor White
+    Write-Host "  make local    # 로컬 개발 서버 실행 (SQLite)" -ForegroundColor White
+    Write-Host "  make dev          # 개발 환경 서버 실행 (원격 MySQL)" -ForegroundColor White
+    Write-Host "  make prod         # 프로덕션 환경 서버 실행 (원격 MySQL)" -ForegroundColor White
+    Write-Host "  make test         # API 테스트" -ForegroundColor White
     Write-Host ""
     Write-Host "💡 이 터미널을 닫으면 가상환경이 비활성화됩니다." -ForegroundColor Gray
 } else {

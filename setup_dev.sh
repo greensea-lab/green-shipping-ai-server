@@ -56,19 +56,42 @@ print_step "필요한 패키지들을 설치합니다..."
 pip install -r requirements.txt
 print_success "모든 패키지가 설치되었습니다."
 
-# 5. 환경 변수 파일 확인
-print_step "환경 변수 파일을 확인합니다..."
+# 5. 환경별 설정 파일 확인
+print_step "환경별 설정 파일을 확인합니다..."
+
+# 환경별 설정 파일 존재 여부 확인
+if [ -f "env.local" ]; then
+    print_success "로컬 환경 설정 파일 (env.local)이 존재합니다."
+fi
+
+if [ -f "env.dev" ]; then
+    print_success "개발 환경 설정 파일 (env.dev)이 존재합니다."
+fi
+
+if [ -f "env.production" ]; then
+    print_success "프로덕션 환경 설정 파일 (env.production)이 존재합니다."
+fi
+
+# 기본 .env 파일 설정 (로컬 환경으로 초기화)
 if [ ! -f ".env" ]; then
-    if [ -f "env.example" ]; then
+    if [ -f "env.local" ]; then
+        cp env.local .env
+        print_success "로컬 환경 설정으로 .env 파일이 생성되었습니다."
+    elif [ -f "env.example" ]; then
         cp env.example .env
-        print_warning ".env 파일이 생성되었습니다. 데이터베이스 설정을 확인해주세요."
+        print_warning ".env 파일이 생성되었습니다. 환경별 설정을 확인해주세요."
     else
-        print_error "env.example 파일을 찾을 수 없습니다."
+        print_error "환경 설정 파일을 찾을 수 없습니다."
         exit 1
     fi
 else
     print_success ".env 파일이 이미 존재합니다."
 fi
+
+print_step "환경별 서버 실행 방법:"
+echo "  - 로컬 환경: make local (SQLite 사용)"
+echo "  - 개발 환경: make dev (원격 MySQL 사용)"
+echo "  - 프로덕션 환경: make prod (원격 MySQL 사용)"
 
 # 6. IDE 설정 파일 생성
 print_step "IDE 설정 파일을 생성합니다..."
