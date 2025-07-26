@@ -988,6 +988,283 @@ make migrate
 3. **터미널 메시지를 주의깊게 읽어보세요**
    - 에러 메시지에 해결 방법이 포함되어 있을 수 있습니다
 
+## 🔐 GitHub Personal Access Token (PAT) 설정 및 Push 가이드
+
+### 1. GitHub Personal Access Token 생성
+
+#### 1단계: GitHub에서 토큰 생성
+1. **GitHub.com 접속**
+   - https://github.com 에 로그인
+
+2. **Settings 메뉴로 이동**
+   - 우측 상단 프로필 아이콘 클릭 → Settings
+
+3. **Developer settings 접속**
+   - 좌측 메뉴 하단 "Developer settings" 클릭
+
+4. **Personal access tokens 생성**
+   - "Personal access tokens" → "Tokens (classic)" 클릭
+   - "Generate new token" → "Generate new token (classic)" 클릭
+
+5. **토큰 설정**
+   - **Note**: `green-shipping-ai-server-access` (또는 원하는 이름)
+   - **Expiration**: 원하는 만료 기간 선택 (예: 90 days)
+   - **Scopes**: `repo` 체크 (전체 저장소 접근 권한)
+   - **Generate token** 클릭
+    
+6. **토큰 복사**
+   - 생성된 토큰을 안전한 곳에 복사해두세요!
+   - **⚠️ 주의**: 이 페이지를 벗어나면 토큰을 다시 볼 수 없습니다
+
+### 2. Git 설정 확인
+
+```bash
+# 현재 Git 사용자 정보 확인
+git config --global user.name
+git config --global user.email
+
+# GitHub 프로필의 "Name" 필드와 동일하게 설정
+# GitHub.com → Settings → Account → Name 확인 후 설정
+git config --global user.name "Your GitHub Profile Name"
+git config --global user.email "your.email@example.com"
+
+# 예시
+git config --global user.name "Jiyoung Jeong"
+git config --global user.email "helen3077@yoensei.ac.kr"
+
+# 또는 스크립트 사용
+# macOS/Linux:
+./check_github_user.sh
+
+# Windows:
+.\check_github_user.ps1
+```
+
+### 3. GitHub PAT 설정 (두 가지 방법)
+
+#### 방법 1: 한 번만 설정하고 재사용 (권장)
+
+**초기 설정 (한 번만):**
+```bash
+# macOS/Linux
+./setup_github_pat.sh
+
+# Windows
+.\setup_github_pat.ps1
+
+# 또는 Makefile 사용
+make setup-github-pat
+```
+
+**이후 사용:**
+```bash
+# macOS/Linux
+./push_with_pat_saved.sh
+
+# Windows
+.\push_with_pat_saved.ps1
+
+# 또는 Makefile 사용
+make push-with-pat-saved
+```
+
+#### 방법 2: 매번 PAT 입력 (기존 방식)
+
+```bash
+# 현재 원격 저장소 확인
+git remote -v
+
+# PAT를 포함한 URL로 업데이트
+git remote set-url origin https://YOUR_PAT@github.com/greensea-lab/green-shipping-ai-server.git
+
+# 예시 (실제 토큰으로 교체)
+git remote set-url origin https://ghp_xxxxxxxxxxxxxxxx@github.com/greensea-lab/green-shipping-ai-server.git
+```
+
+### 4. 변경사항 커밋 및 Push
+
+```bash
+# 현재 상태 확인
+git status
+
+# 변경사항 추가
+git add .
+
+# 커밋
+git commit -m "Update project files"
+
+# Push (PAT를 사용하여 인증)
+git push origin main
+```
+
+### 5. Push 테스트
+
+```bash
+# 간단한 테스트 파일 생성
+echo "# Test commit" >> test.md
+
+# 커밋 및 Push
+git add test.md
+git commit -m "Test commit with PAT"
+git push origin main
+
+# 테스트 파일 삭제
+git rm test.md
+git commit -m "Remove test file"
+git push origin main
+```
+
+### 6. 자동화 스크립트 사용 (선택사항)
+
+#### GitHub 사용자 정보 확인 스크립트
+
+**macOS/Linux:**
+```bash
+./check_github_user.sh
+```
+
+**Windows:**
+```powershell
+.\check_github_user.ps1
+```
+
+#### Push 스크립트 생성
+```bash
+# 파일 생성: push_with_pat.sh
+cat > push_with_pat.sh << 'EOF'
+#!/bin/bash
+
+echo "🔐 GitHub PAT Push Script"
+echo "=========================="
+
+# PAT 입력 받기
+read -s -p "Enter your GitHub Personal Access Token: " PAT
+echo
+
+# 원격 저장소 URL 업데이트
+git remote set-url origin https://${PAT}@github.com/greensea-lab/green-shipping-ai-server.git
+
+# 변경사항 확인
+echo "📋 Current changes:"
+git status
+
+# 커밋 메시지 입력
+read -p "Enter commit message: " COMMIT_MSG
+
+# 커밋 및 Push
+git add .
+git commit -m "$COMMIT_MSG"
+git push origin main
+
+echo "✅ Push completed successfully!"
+EOF
+
+# 실행 권한 부여
+chmod +x push_with_pat.sh
+
+# 사용법
+./push_with_pat.sh
+```
+
+#### Windows용 스크립트 생성
+```powershell
+# 파일 생성: push_with_pat.ps1
+@"
+# GitHub PAT Push Script
+Write-Host "🔐 GitHub PAT Push Script" -ForegroundColor Green
+Write-Host "==========================" -ForegroundColor Green
+
+# PAT 입력 받기
+$PAT = Read-Host "Enter your GitHub Personal Access Token" -AsSecureString
+$PAT = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($PAT))
+
+# 원격 저장소 URL 업데이트
+git remote set-url origin "https://${PAT}@github.com/greensea-lab/green-shipping-ai-server.git"
+
+# 변경사항 확인
+Write-Host "📋 Current changes:" -ForegroundColor Yellow
+git status
+
+# 커밋 메시지 입력
+$COMMIT_MSG = Read-Host "Enter commit message"
+
+# 커밋 및 Push
+git add .
+git commit -m "$COMMIT_MSG"
+git push origin main
+
+Write-Host "✅ Push completed successfully!" -ForegroundColor Green
+"@ | Out-File -FilePath "push_with_pat.ps1" -Encoding UTF8
+
+# 사용법
+.\push_with_pat.ps1
+```
+
+### 7. 문제 해결
+
+#### 문제 1: "Authentication failed"
+```bash
+# 원인: PAT가 잘못되었거나 만료됨
+# 해결: GitHub에서 새 토큰 생성 후 다시 설정
+git remote set-url origin https://NEW_PAT@github.com/greensea-lab/green-shipping-ai-server.git
+```
+
+#### 문제 2: "Permission denied"
+```bash
+# 원인: 저장소에 대한 권한이 없음
+# 해결: GitHub에서 저장소 접근 권한 확인
+# 또는 저장소 소유자에게 권한 요청
+```
+
+#### 문제 3: "Repository not found"
+```bash
+# 원인: 저장소 URL이 잘못됨
+# 해결: 올바른 저장소 URL 확인
+git remote -v
+git remote set-url origin https://YOUR_PAT@github.com/CORRECT_USERNAME/CORRECT_REPO.git
+```
+
+### 8. 보안 주의사항
+
+1. **토큰 보안**
+   - PAT를 코드에 하드코딩하지 마세요
+   - 토큰을 공개 저장소에 올리지 마세요
+   - 정기적으로 토큰을 갱신하세요
+
+2. **환경 변수 사용 (권장)**
+   ```bash
+   # .env 파일에 추가 (gitignore에 포함됨)
+   GITHUB_PAT=your_personal_access_token
+   
+   # 스크립트에서 사용
+   export GITHUB_PAT
+   git remote set-url origin https://${GITHUB_PAT}@github.com/greensea-lab/green-shipping-ai-server.git
+   ```
+
+3. **토큰 권한 최소화**
+   - 필요한 최소 권한만 부여하세요
+   - `repo` 권한이면 충분합니다
+
+### 9. 자동화 도구 추가
+
+Makefile에 PAT 관련 명령어 추가:
+
+```bash
+# Makefile에 추가
+push-with-pat:
+	@echo "🔐 Pushing with PAT..."
+	@read -s -p "Enter your GitHub PAT: " pat; \
+	git remote set-url origin https://$$pat@github.com/greensea-lab/green-shipping-ai-server.git; \
+	git add .; \
+	read -p "Enter commit message: " msg; \
+	git commit -m "$$msg"; \
+	git push origin main; \
+	echo "✅ Push completed!"
+
+# 사용법
+make push-with-pat
+```
+
 ## 🎉 축하합니다!
 
 이제 Green Shipping AI Server 개발 환경이 완성되었습니다!

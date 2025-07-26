@@ -32,9 +32,16 @@ help:
 	@echo "  make lint                             - 코드 품질 검사"
 	@echo "  make test-run                         - 테스트 실행"
 	@echo ""
+	@echo "🔐 GitHub Push:"
+	@echo "  make push-with-pat                    - PAT를 사용하여 GitHub에 Push"
+	@echo "  make push-with-pat-saved              - 저장된 PAT를 사용하여 Push"
+	@echo "  make setup-github-pat                 - GitHub PAT 초기 설정"
+	@echo "  make check-github-user                - GitHub 사용자 정보 확인"
+	@echo ""
 	@echo "💡 예시:"
 	@echo "  make install-package PACKAGE=pandas"
 	@echo "  make migrate-create MESSAGE='Add user table'"
+	@echo "  make push-with-pat"
 	@echo ""
 
 # 개발 환경 초기 설정
@@ -205,4 +212,53 @@ lint:
 test-run:
 	@echo "🧪 테스트를 실행합니다..."
 	@source venv/bin/activate && pytest tests/ -v
-	@echo "✅ 테스트가 완료되었습니다." 
+	@echo "✅ 테스트가 완료되었습니다."
+
+# GitHub 사용자 정보 확인
+check-github-user:
+	@echo "🔍 GitHub 사용자 정보를 확인합니다..."
+	@if [ -f "check_github_user.sh" ]; then \
+		chmod +x check_github_user.sh; \
+		./check_github_user.sh; \
+	elif [ -f "check_github_user.ps1" ]; then \
+		echo "Windows PowerShell 스크립트를 사용하세요:"; \
+		echo "  .\check_github_user.ps1"; \
+	else \
+		echo "❌ check_github_user.sh 파일이 없습니다."; \
+		echo "Git 사용자 정보를 수동으로 확인하세요:"; \
+		echo "  git config --global user.name"; \
+		echo "  git config --global user.email"; \
+	fi
+
+# GitHub PAT 초기 설정
+setup-github-pat:
+	@echo "🔐 GitHub PAT를 초기 설정합니다..."
+	@if [ -f "setup_github_pat.sh" ]; then \
+		chmod +x setup_github_pat.sh; \
+		./setup_github_pat.sh; \
+	else \
+		echo "❌ setup_github_pat.sh 파일이 없습니다."; \
+		echo "Windows 사용자는 .\setup_github_pat.ps1을 사용하세요."; \
+	fi
+
+# GitHub PAT를 사용한 Push (매번 입력)
+push-with-pat:
+	@echo "🔐 GitHub PAT를 사용하여 Push합니다..."
+	@read -s -p "Enter your GitHub PAT: " pat; \
+	git remote set-url origin https://$$pat@github.com/greensea-lab/green-shipping-ai-server.git; \
+	git add .; \
+	read -p "Enter commit message: " msg; \
+	git commit -m "$$msg"; \
+	git push origin main; \
+	echo "✅ Push completed!"
+
+# 저장된 PAT를 사용한 Push (한 번만 설정)
+push-with-pat-saved:
+	@echo "🔐 저장된 PAT를 사용하여 Push합니다..."
+	@if [ -f "push_with_pat_saved.sh" ]; then \
+		chmod +x push_with_pat_saved.sh; \
+		./push_with_pat_saved.sh; \
+	else \
+		echo "❌ push_with_pat_saved.sh 파일이 없습니다."; \
+		echo "Windows 사용자는 .\push_with_pat_saved.ps1을 사용하세요."; \
+	fi 
