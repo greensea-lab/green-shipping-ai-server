@@ -148,7 +148,6 @@ test.db
 # Environment files (except examples)
 .env
 .env.local
-env.local
 
 # Backup files
 requirements_backup.txt
@@ -168,6 +167,8 @@ logs/
 .vscode/settings.json
 .vscode/launch.json
 .idea/runConfigurations/
+
+
 
 # Project specific
 __pycache__/
