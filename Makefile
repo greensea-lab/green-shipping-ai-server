@@ -32,228 +32,228 @@ help:
 
 # 개발 환경 초기 설정
 setup:
-	@echo "🚀 개발 환경을 설정합니다..."
+	@echo "🚀 개발 environment setup..."
 	@if [ ! -d "venv" ]; then \
-		echo "📦 Python 가상환경을 생성합니다..."; \
+		echo "📦 Creating Python virtual environment..."; \
 		python3 -m venv venv; \
 	fi
-	@echo "🔧 가상환경을 활성화합니다..."
-	@source venv/bin/activate && pip install --upgrade pip
-	@echo "📚 필요한 패키지를 설치합니다..."
-	@source venv/bin/activate && pip install -r requirements.txt
+	@echo "🔧 Activating virtual environment..."
+	@venv/Scripts/pip install --upgrade pip || venv/bin/pip install --upgrade pip
+	@echo "📚 Installing required packages..."
+	@venv/Scripts/pip install -r requirements.txt || venv/bin/pip install -r requirements.txt
 	@if [ ! -f ".env" ]; then \
-		echo "⚙️  환경 변수 파일을 생성합니다..."; \
+		echo "⚙️  Creating environment file..."; \
 		if [ -f "env.local" ]; then \
 			cp env.local .env; \
-			echo "✅ 로컬 환경 설정으로 .env 파일이 생성되었습니다."; \
+			echo "✅ .env file created with local environment settings."; \
 		elif [ -f "env.example" ]; then \
 			cp env.example .env; \
-			echo "⚠️  .env 파일이 생성되었습니다. 환경별 설정을 확인해주세요."; \
+			echo "⚠️  .env file created. Please check environment-specific settings."; \
 		fi; \
 	fi
-	@echo "✅ 개발 환경 설정이 완료되었습니다!"
+	@echo "✅ Development environment setup completed!"
 
 # 로컬 개발 서버 실행 (SQLite)
 local:
-	@echo "🚀 로컬 개발 서버를 시작합니다 (SQLite)..."
+	@echo "🚀 Starting local development server (SQLite)..."
 	@if [ ! -d "venv" ]; then \
-		echo "❌ 가상환경이 존재하지 않습니다. 먼저 'make setup'을 실행해주세요."; \
+		echo "❌ Virtual environment does not exist. Please run 'make setup' first."; \
 		exit 1; \
 	fi
 	@if [ -f "env.local" ]; then \
 		cp env.local .env; \
-		echo "✅ 로컬 환경 설정을 사용합니다."; \
+		echo "✅ Using local environment settings."; \
 	else \
-		echo "⚠️  env.local 파일이 없습니다. 기본 설정을 사용합니다."; \
+		echo "⚠️  env.local file not found. Using default settings."; \
 	fi
-	@echo "🔧 서버를 시작합니다..."
-	@echo "💡 서버를 중지하려면 Ctrl+C를 누르세요."
-	@echo "🌐 서버 주소: http://localhost:8000"
-	@echo "📚 API 문서: http://localhost:8000/docs"
+	@echo "🔧 Starting server..."
+	@echo "💡 Press Ctrl+C to stop the server."
+	@echo "🌐 Server address: http://localhost:8000"
+	@echo "📚 API documentation: http://localhost:8000/docs"
 	@echo ""
-	@venv/bin/python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+	@venv/Scripts/python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 || venv/bin/python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 # 개발 환경 서버 실행 (원격 MySQL)
 dev:
-	@echo "🚀 개발 환경 서버를 시작합니다 (원격 MySQL)..."
+	@echo "🚀 Starting development server (Remote MySQL)..."
 	@if [ ! -d "venv" ]; then \
-		echo "❌ 가상환경이 존재하지 않습니다. 먼저 'make setup'을 실행해주세요."; \
+		echo "❌ Virtual environment does not exist. Please run 'make setup' first."; \
 		exit 1; \
 	fi
 	@if [ -f "env.dev" ]; then \
 		cp env.dev .env; \
-		echo "✅ 개발 환경 설정을 사용합니다."; \
+		echo "✅ Using development environment settings."; \
 	else \
-		echo "❌ env.dev 파일이 없습니다. 개발 환경 설정을 확인해주세요."; \
+		echo "❌ env.dev file not found. Please check development environment settings."; \
 		exit 1; \
 	fi
-	@echo "🔧 서버를 시작합니다..."
-	@echo "💡 서버를 중지하려면 Ctrl+C를 누르세요."
-	@echo "🌐 서버 주소: http://localhost:8000"
-	@echo "📚 API 문서: http://localhost:8000/docs"
+	@echo "🔧 Starting server..."
+	@echo "💡 Press Ctrl+C to stop the server."
+	@echo "🌐 Server address: http://localhost:8000"
+	@echo "📚 API documentation: http://localhost:8000/docs"
 	@echo ""
-	@venv/bin/python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+	@venv/Scripts/python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 || venv/bin/python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 # 프로덕션 환경 서버 실행 (원격 MySQL)
 prod:
-	@echo "🚀 프로덕션 환경 서버를 시작합니다 (원격 MySQL)..."
-	@echo "⚠️  프로덕션 환경에서 실행 중입니다."
+	@echo "🚀 Starting production server (Remote MySQL)..."
+	@echo "⚠️  Running in production environment."
 	@if [ ! -d "venv" ]; then \
-		echo "❌ 가상환경이 존재하지 않습니다. 먼저 'make setup'을 실행해주세요."; \
+		echo "❌ Virtual environment does not exist. Please run 'make setup' first."; \
 		exit 1; \
 	fi
 	@if [ -f "env.production" ]; then \
 		cp env.production .env; \
-		echo "✅ 프로덕션 환경 설정을 사용합니다."; \
+		echo "✅ Using production environment settings."; \
 	else \
-		echo "❌ env.production 파일이 없습니다. 프로덕션 환경 설정을 확인해주세요."; \
+		echo "❌ env.production file not found. Please check production environment settings."; \
 		exit 1; \
 	fi
-	@echo "🔧 서버를 시작합니다..."
-	@echo "💡 서버를 중지하려면 Ctrl+C를 누르세요."
-	@echo "🌐 서버 주소: http://localhost:8000"
-	@echo "📚 API 문서: http://localhost:8000/docs"
+	@echo "🔧 Starting server..."
+	@echo "💡 Press Ctrl+C to stop the server."
+	@echo "🌐 Server address: http://localhost:8000"
+	@echo "📚 API documentation: http://localhost:8000/docs"
 	@echo ""
-	@venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+	@venv/Scripts/python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 || venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
 
 # API 테스트
 test:
-	@echo "🧪 API 테스트를 실행합니다..."
+	@echo "🧪 Running API tests..."
 	@SERVER_STARTED=false; \
 	if curl -s http://localhost:8000/health > /dev/null 2>&1; then \
-		echo "✅ 서버가 실행 중입니다."; \
+		echo "✅ Server is running."; \
 	else \
-		echo "❌ 서버가 실행되지 않았습니다."; \
-		echo "🚀 로컬 개발 서버를 자동으로 시작합니다..."; \
+		echo "❌ Server is not running."; \
+		echo "🚀 Starting local development server automatically..."; \
 		$(MAKE) local & \
 		sleep 5; \
 		if curl -s http://localhost:8000/health > /dev/null 2>&1; then \
-			echo "✅ 서버가 성공적으로 시작되었습니다."; \
+			echo "✅ Server started successfully."; \
 			SERVER_STARTED=true; \
 		else \
-			echo "❌ 서버 시작에 실패했습니다."; \
-			echo "💡 수동으로 서버를 시작해주세요: make local"; \
+			echo "❌ Failed to start server."; \
+			echo "💡 Please start server manually: make local"; \
 			exit 1; \
 		fi; \
 	fi; \
-	echo "📋 사용 가능한 API 엔드포인트:"; \
-	echo "   - 메인 페이지: http://localhost:8000"; \
-	echo "   - API 문서: http://localhost:8000/docs"; \
-	echo "   - 헬스 체크: http://localhost:8000/health"; \
-	echo "   - 사용자 API: http://localhost:8000/api/v1/users/"; \
+	echo "📋 Available API endpoints:"; \
+	echo "   - Main page: http://localhost:8000"; \
+	echo "   - API docs: http://localhost:8000/docs"; \
+	echo "   - Health check: http://localhost:8000/health"; \
+	echo "   - Users API: http://localhost:8000/api/v1/users/"; \
 	echo ""; \
-	echo "🧪 API 테스트를 실행합니다..."; \
+	echo "🧪 Running API tests..."; \
 	curl -s http://localhost:8000/health | python3 -m json.tool; \
 	echo ""; \
-	echo "✅ API 테스트가 완료되었습니다."; \
+	echo "✅ API tests completed."; \
 	if [ "$$SERVER_STARTED" = "true" ]; then \
-		echo "🛑 자동으로 시작된 서버를 종료합니다..."; \
+		echo "🛑 Stopping automatically started server..."; \
 		pkill -f uvicorn; \
-		echo "✅ 서버가 종료되었습니다."; \
+		echo "✅ Server stopped."; \
 	fi
 
 # 가상환경 삭제
 clean:
-	@echo "🧹 가상환경을 삭제합니다..."
+	@echo "🧹 Removing virtual environment..."
 	@rm -rf venv
-	@echo "✅ 가상환경이 삭제되었습니다."
+	@echo "✅ Virtual environment removed."
 
 # 패키지 설치
 install-deps:
-	@echo "📚 패키지를 설치합니다..."
-	@source venv/bin/activate && pip install -r requirements.txt
-	@echo "✅ 패키지 설치가 완료되었습니다."
+	@echo "📚 Installing packages..."
+	@venv/Scripts/pip install -r requirements.txt || venv/bin/pip install -r requirements.txt
+	@echo "✅ Package installation completed."
 
 # 데이터베이스 마이그레이션 (로컬 SQLite)
 migrate:
-	@echo "🗄️  로컬 데이터베이스 마이그레이션을 실행합니다 (SQLite)..."
-	@source venv/bin/activate && alembic upgrade head
-	@echo "✅ 로컬 마이그레이션이 완료되었습니다."
+	@echo "🗄️  Running local database migration (SQLite)..."
+	@venv/Scripts/alembic upgrade head || venv/bin/alembic upgrade head
+	@echo "✅ Local migration completed."
 
 # 데이터베이스 마이그레이션 (개발 환경 MySQL)
 migrate-dev:
-	@echo "🗄️  개발 환경 데이터베이스 마이그레이션을 실행합니다 (MySQL)..."
+	@echo "🗄️  Running development database migration (MySQL)..."
 	@if [ -f "env.dev" ]; then \
-		echo "📋 개발 환경 설정 파일을 사용합니다."; \
-		source venv/bin/activate && DATABASE_URL=$$(grep DATABASE_URL env.dev | cut -d '=' -f2-) alembic upgrade head; \
-		echo "✅ 개발 환경 마이그레이션이 완료되었습니다."; \
+		echo "📋 Using development environment settings."; \
+		venv/Scripts/alembic upgrade head || venv/bin/alembic upgrade head; \
+		echo "✅ Development migration completed."; \
 	else \
-		echo "❌ env.dev 파일이 없습니다. 개발 환경 설정을 확인해주세요."; \
+		echo "❌ env.dev file not found. Please check development environment settings."; \
 	fi
 
 # 프로덕션 마이그레이션 (보안상 제한)
 migrate-prod:
-	@echo "🚫 프로덕션 마이그레이션은 보안상 로컬에서 실행할 수 없습니다."
-	@echo "📋 프로덕션 환경에서 직접 실행하거나 CI/CD 파이프라인을 사용하세요."
+	@echo "🚫 Production migration cannot be run locally for security reasons."
+	@echo "📋 Run directly in production environment or use CI/CD pipeline."
 	@echo ""
-	@echo "💡 대안:"
-	@echo "1. 프로덕션 서버에서 직접 실행"
-	@echo "2. CI/CD 파이프라인에서 자동 실행"
-	@echo "3. 데이터베이스 관리 도구 사용"
+	@echo "💡 Alternatives:"
+	@echo "1. Run directly on production server"
+	@echo "2. Automatic execution in CI/CD pipeline"
+	@echo "3. Use database management tools"
 
 # 새로운 마이그레이션 생성
 migrate-create:
-	@echo "📝 새로운 마이그레이션을 생성합니다..."
-	@echo "사용법: make migrate-create MESSAGE='마이그레이션 설명'"
-	@source venv/bin/activate && alembic revision --autogenerate -m "$(MESSAGE)"
-	@echo "✅ 마이그레이션이 생성되었습니다."
+	@echo "📝 Creating new migration..."
+	@echo "Usage: make migrate-create MESSAGE='migration description'"
+	@venv/Scripts/alembic revision --autogenerate -m "$(MESSAGE)" || venv/bin/alembic revision --autogenerate -m "$(MESSAGE)"
+	@echo "✅ Migration created."
 
 # 서버 상태 확인
 status:
-	@echo "📊 서버 상태를 확인합니다..."
+	@echo "📊 Checking server status..."
 	@if curl -s http://localhost:8000/health > /dev/null 2>&1; then \
-		echo "✅ 서버가 실행 중입니다."; \
+		echo "✅ Server is running."; \
 		curl -s http://localhost:8000/health | python3 -m json.tool; \
 	else \
-		echo "❌ 서버가 실행되지 않았습니다."; \
+		echo "❌ Server is not running."; \
 	fi
 
 # GitHub 사용자 정보 확인
 check-github-user:
-	@echo "🔍 GitHub 사용자 정보를 확인합니다..."
+	@echo "🔍 Checking GitHub user information..."
 	@if [ -f "check_github_user.sh" ]; then \
 		chmod +x check_github_user.sh; \
 		./check_github_user.sh; \
 	elif [ -f "check_github_user.ps1" ]; then \
-		echo "Windows PowerShell 스크립트를 사용하세요:"; \
+		echo "Use Windows PowerShell script:"; \
 		echo "  .\check_github_user.ps1"; \
 	else \
-		echo "❌ check_github_user.sh 파일이 없습니다."; \
-		echo "Git 사용자 정보를 수동으로 확인하세요:"; \
+		echo "❌ check_github_user.sh file not found."; \
+		echo "Check Git user information manually:"; \
 		echo "  git config --global user.name"; \
 		echo "  git config --global user.email"; \
 	fi
 
 # 환경별 설정 확인
 check-env:
-	@echo "🔍 환경별 설정을 확인합니다..."
+	@echo "🔍 Checking environment settings..."
 	@if [ -f "check_env.sh" ]; then \
 		chmod +x check_env.sh; \
 		./check_env.sh; \
 	elif [ -f "check_env.ps1" ]; then \
-		echo "Windows PowerShell 스크립트를 사용하세요:"; \
+		echo "Use Windows PowerShell script:"; \
 		echo "  .\check_env.ps1"; \
 	else \
-		echo "❌ check_env.sh 파일이 없습니다."; \
-		echo "환경 설정을 수동으로 확인하세요:"; \
+		echo "❌ check_env.sh file not found."; \
+		echo "Check environment settings manually:"; \
 		echo "  cat .env"; \
 		echo "  ls env.*"; \
 	fi
 
 # GitHub PAT 초기 설정
 setup-github-pat:
-	@echo "🔐 GitHub PAT를 초기 설정합니다..."
+	@echo "🔐 Setting up GitHub PAT..."
 	@if [ -f "setup_github_pat.sh" ]; then \
 		chmod +x setup_github_pat.sh; \
 		./setup_github_pat.sh; \
 	else \
-		echo "❌ setup_github_pat.sh 파일이 없습니다."; \
-		echo "Windows 사용자는 .\setup_github_pat.ps1을 사용하세요."; \
+		echo "❌ setup_github_pat.sh file not found."; \
+		echo "Windows users should use .\setup_github_pat.ps1"; \
 	fi
 
 # GitHub PAT를 사용한 Push (매번 입력)
 push-with-pat:
-	@echo "🔐 GitHub PAT를 사용하여 Push합니다..."
+	@echo "🔐 Pushing with GitHub PAT..."
 	@read -s -p "Enter your GitHub PAT: " pat; \
 	git remote set-url origin https://$$pat@github.com/greensea-lab/green-shipping-ai-server.git; \
 	git add .; \
@@ -264,11 +264,11 @@ push-with-pat:
 
 # 저장된 PAT를 사용한 Push (한 번만 설정)
 push-with-pat-saved:
-	@echo "🔐 저장된 PAT를 사용하여 Push합니다..."
+	@echo "🔐 Pushing with saved PAT..."
 	@if [ -f "push_with_pat_saved.sh" ]; then \
 		chmod +x push_with_pat_saved.sh; \
 		./push_with_pat_saved.sh; \
 	else \
-		echo "❌ push_with_pat_saved.sh 파일이 없습니다."; \
-		echo "Windows 사용자는 .\push_with_pat_saved.ps1을 사용하세요."; \
+		echo "❌ push_with_pat_saved.sh file not found."; \
+		echo "Windows users should use .\push_with_pat_saved.ps1"; \
 	fi 
