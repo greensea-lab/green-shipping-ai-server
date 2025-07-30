@@ -33,66 +33,35 @@ help:
 # 개발 환경 초기 설정
 setup:
 	@echo "🚀 개발 environment setup..."
-	@if [ ! -d "venv" ]; then \
-		echo "📦 Creating Python virtual environment..."; \
-		python3 -m venv venv; \
+	@if [ "$(OS)" = "Windows_NT" ]; then \
+		echo "🪟 Windows 환경에서 PowerShell 스크립트를 실행합니다..."; \
+		powershell -ExecutionPolicy Bypass -File setup_dev.ps1; \
+	else \
+		echo "🐧 Unix/Linux 환경에서 bash 스크립트를 실행합니다..."; \
+		./setup_dev.sh; \
 	fi
-	@echo "🔧 Activating virtual environment..."
-	@venv/Scripts/pip install --upgrade pip || venv/bin/pip install --upgrade pip
-	@echo "📚 Installing required packages..."
-	@venv/Scripts/pip install -r requirements.txt || venv/bin/pip install -r requirements.txt
-	@if [ ! -f ".env" ]; then \
-		echo "⚙️  Creating environment file..."; \
-		if [ -f "env.local" ]; then \
-			cp env.local .env; \
-			echo "✅ .env file created with local environment settings."; \
-		elif [ -f "env.example" ]; then \
-			cp env.example .env; \
-			echo "⚠️  .env file created. Please check environment-specific settings."; \
-		fi; \
-	fi
-	@echo "✅ Development environment setup completed!"
 
 # 로컬 개발 서버 실행 (SQLite)
 local:
 	@echo "🚀 Starting local development server (SQLite)..."
-	@if [ ! -d "venv" ]; then \
-		echo "❌ Virtual environment does not exist. Please run 'make setup' first."; \
-		exit 1; \
-	fi
-	@if [ -f "env.local" ]; then \
-		cp env.local .env; \
-		echo "✅ Using local environment settings."; \
+	@if [ "$(OS)" = "Windows_NT" ]; then \
+		echo "🪟 Windows 환경에서 PowerShell 스크립트를 실행합니다..."; \
+		powershell -ExecutionPolicy Bypass -File run_local.ps1; \
 	else \
-		echo "⚠️  env.local file not found. Using default settings."; \
+		echo "🐧 Unix/Linux 환경에서 bash 스크립트를 실행합니다..."; \
+		./run_local.sh; \
 	fi
-	@echo "🔧 Starting server..."
-	@echo "💡 Press Ctrl+C to stop the server."
-	@echo "🌐 Server address: http://localhost:8000"
-	@echo "📚 API documentation: http://localhost:8000/docs"
-	@echo ""
-	@venv/Scripts/python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 || venv/bin/python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 # 개발 환경 서버 실행 (원격 MySQL)
 dev:
 	@echo "🚀 Starting development server (Remote MySQL)..."
-	@if [ ! -d "venv" ]; then \
-		echo "❌ Virtual environment does not exist. Please run 'make setup' first."; \
-		exit 1; \
-	fi
-	@if [ -f "env.dev" ]; then \
-		cp env.dev .env; \
-		echo "✅ Using development environment settings."; \
+	@if [ "$(OS)" = "Windows_NT" ]; then \
+		echo "🪟 Windows 환경에서 PowerShell 스크립트를 실행합니다..."; \
+		powershell -ExecutionPolicy Bypass -File run_dev.ps1; \
 	else \
-		echo "❌ env.dev file not found. Please check development environment settings."; \
-		exit 1; \
+		echo "🐧 Unix/Linux 환경에서 bash 스크립트를 실행합니다..."; \
+		./run_dev.sh; \
 	fi
-	@echo "🔧 Starting server..."
-	@echo "💡 Press Ctrl+C to stop the server."
-	@echo "🌐 Server address: http://localhost:8000"
-	@echo "📚 API documentation: http://localhost:8000/docs"
-	@echo ""
-	@venv/Scripts/python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 || venv/bin/python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 # 프로덕션 환경 서버 실행 (원격 MySQL)
 prod:
@@ -155,14 +124,24 @@ test:
 # 가상환경 삭제
 clean:
 	@echo "🧹 Removing virtual environment..."
-	@rm -rf venv
-	@echo "✅ Virtual environment removed."
+	@if [ "$(OS)" = "Windows_NT" ]; then \
+		echo "🪟 Windows 환경에서 PowerShell 스크립트를 실행합니다..."; \
+		powershell -ExecutionPolicy Bypass -File clean.ps1; \
+	else \
+		echo "🐧 Unix/Linux 환경에서 bash 스크립트를 실행합니다..."; \
+		./clean.sh; \
+	fi
 
 # 패키지 설치
 install-deps:
 	@echo "📚 Installing packages..."
-	@venv/Scripts/pip install -r requirements.txt || venv/bin/pip install -r requirements.txt
-	@echo "✅ Package installation completed."
+	@if [ "$(OS)" = "Windows_NT" ]; then \
+		echo "🪟 Windows 환경에서 PowerShell 스크립트를 실행합니다..."; \
+		powershell -ExecutionPolicy Bypass -File install_deps.ps1; \
+	else \
+		echo "🐧 Unix/Linux 환경에서 bash 스크립트를 실행합니다..."; \
+		./install_deps.sh; \
+	fi
 
 # 데이터베이스 마이그레이션 (로컬 SQLite)
 migrate:
