@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+  <meta charset="utf-8"/>
+  <title>{{ title }}</title>
+  <style>
+    body { font-family: Helvetica, Arial, sans-serif; font-size: 12px; color: #111; }
+    h1 { font-size: 20px; margin-bottom: 4px; }
+    h2 { font-size: 16px; margin-top: 18px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    th, td { border: 1px solid #ddd; padding: 6px; }
+    th { background: #f5f5f5; }
+    .small { color: #666; font-size: 10px; }
+  </style>
+  </head>
+<body>
+  <h1>{{ title }}</h1>
+  <div class="small">Generated at: {{ generated_at }}</div>
+
+  <h2>개요</h2>
+  <p>
+    본 보고서는 입력된 시나리오에 대해 속도 변경에 따른 연료/CO₂ 및 운항시간 변화를 요약합니다.
+  </p>
+
+  <h2>시나리오</h2>
+  <table>
+    <thead>
+    <tr>
+      <th>#</th>
+      <th>거리(NM)</th>
+      <th>기준 속력(kn)</th>
+      <th>신규 속력(kn)</th>
+      <th>SFOC</th>
+      <th>k</th>
+      <th>선종</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for s in scenarios %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ s.distance_nm }}</td>
+        <td>{{ s.base_speed_knots }}</td>
+        <td>{{ s.new_speed_knots }}</td>
+        <td>{{ s.sfoc_g_per_kwh or '-' }}</td>
+        <td>{{ s.k or '-' }}</td>
+        <td>{{ s.vessel_type or '-' }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+  <h2>결과 요약</h2>
+  <table>
+    <thead>
+    <tr>
+      <th>#</th>
+      <th>Fuel Base/New (ton)</th>
+      <th>CO₂ Base/New (ton)</th>
+      <th>CO₂ 감소율(%)</th>
+      <th>시간 Base/New (h)</th>
+      <th>Δ시간(h)</th>
+      <th>시간 증가율(%)</th>
+      <th>비고</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for r in results %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ r.fc_base_ton or '-' }} / {{ r.fc_new_ton or '-' }}</td>
+        <td>{{ r.co2_base_ton or '-' }} / {{ r.co2_new_ton or '-' }}</td>
+        <td>{{ r.co2_reduction_pct or '-' }}</td>
+        <td>{{ r.time_base_hours or '-' }} / {{ r.time_new_hours or '-' }}</td>
+        <td>{{ r.time_delta_hours or '-' }}</td>
+        <td>{{ r.time_increase_pct or '-' }}</td>
+        <td class="small">{{ (r.assumptions or []) | join('; ') }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+</body>
+</html>
+

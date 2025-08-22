@@ -352,6 +352,61 @@ make clean    # 가상환경 삭제
 make help     # 사용 가능한 명령어 확인
 ```
 
+## 🤖 AI 기능(내부 전용)
+
+본 프로젝트에는 내부 전용 생성형 AI API가 포함됩니다. 보안을 위해 반드시 헤더 토큰이 필요합니다.
+
+- 환경변수 설정(.env):
+  - `INTERNAL_API_TOKEN=your-internal-token`
+  - `OPENAI_API_KEY=sk-...`
+  - `AI_MODEL=gpt-5` (기본값), `EMBEDDING_MODEL=text-embedding-3-small`
+
+- 공통: 모든 AI 엔드포인트는 요청 헤더 `X-Internal-Token: <INTERNAL_API_TOKEN>` 필요
+
+- 채팅 질의응답
+  - `POST /api/v1/ai/chat`
+  - 예시:
+    ```bash
+    curl -s -X POST http://localhost:8000/api/v1/ai/chat \
+      -H 'Content-Type: application/json' \
+      -H 'X-Internal-Token: YOUR_TOKEN' \
+      -d '{
+        "message":"속도를 1노트 줄이면 CO2 얼마나 감소?",
+        "distance_nm": 1200,
+        "base_speed_knots": 14,
+        "new_speed_knots": 13,
+        "sfoc_g_per_kwh": 180,
+        "k": 0.65,
+        "language": "ko"
+      }'
+    ```
+
+- 보고서 생성(PDF)
+  - `POST /api/v1/ai/report`
+  - 예시:
+    ```bash
+    curl -s -X POST http://localhost:8000/api/v1/ai/report \
+      -H 'Content-Type: application/json' \
+      -H 'X-Internal-Token: YOUR_TOKEN' \
+      -d '{
+        "title":"ESG Sample",
+        "language":"ko",
+        "scenarios":[
+          {"distance_nm":1000, "base_speed_knots":14, "new_speed_knots":12, "sfoc_g_per_kwh":180, "k":0.65}
+        ]
+      }'
+    ```
+  - 응답: `{ "report_path": "reports/ESG-...pdf", "summary": "..." }`
+
+- KB 인제스트/검색(관리자용)
+  - `POST /api/v1/ai/kb/ingest` → `kb/` 폴더 내 PDF/MD/TXT를 벡터DB에 적재
+  - `GET  /api/v1/ai/kb/search?query=...` → 상위 문서를 확인
+
+보안 유의사항:
+- 내부 토큰 미설정 시 403 반환. 토큰은 안전하게 배포/회수하세요.
+- 외부 공개 금지(방화벽/Ingress 정책으로 내부망 한정 권장).
+- LLM 비용/사용량 모니터링 권장.
+
 ## 🆘 도움이 필요하시다면
 
 1. **에러 메시지를 복사해서 검색해보세요**

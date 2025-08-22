@@ -25,6 +25,24 @@ class Settings(BaseSettings):
     
     # Environment
     environment: Optional[str] = None
+
+    # AI / LLM
+    ai_provider: str = "openai"
+    ai_model: str = "gpt-5"
+    openai_api_key: Optional[str] = None
+    embedding_model: str = "text-embedding-3-small"
+    ai_temperature: float = 0.2
+    ai_max_tokens: int = 1000
+
+    # Internal simulation API (stubbed if not set)
+    sim_api_base: Optional[str] = None
+    sim_api_key: Optional[str] = None
+
+    # Internal-only protection
+    internal_api_token: Optional[str] = None
+
+    # RAG persistence
+    rag_persist_dir: str = "./data/chroma"
     
     class Config:
         env_file = ".env"
