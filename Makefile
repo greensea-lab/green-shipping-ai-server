@@ -254,7 +254,7 @@ migrate:
 
 # 데이터베이스 마이그레이션 (개발 환경 MySQL)
 migrate-dev:
-	@echo "🗄️  Running development database migration (MySQL)..."
+	@echo "🗄️  Running development database migration (MySQL)..."ls -l
 	@echo "🖥️  환경: $(DETECTED_OS)"
 	@if ! $(call EXISTS_DIR,venv); then \
 		echo "❌ Virtual environment does not exist. Please run 'make setup' first."; \
@@ -262,7 +262,7 @@ migrate-dev:
 	fi
 	@if $(call EXISTS_FILE,env.dev); then \
 		echo "📋 Using development environment settings."; \
-		$(COPY) env.dev .env; \
+		$(COPY) env.dev .env;
 		$(VENV_ALEMBIC) upgrade head; \
 		echo "✅ Development migration completed."; \
 	else \
