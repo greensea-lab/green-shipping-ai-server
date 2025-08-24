@@ -19,8 +19,6 @@ def get_chat_model(model: Optional[str] = None,
     return ChatOpenAI(
         model=use_model,
         temperature=temp,
-        max_tokens=settings.ai_max_tokens,
-        api_key=settings.openai_api_key,
     )
 
 
@@ -29,6 +27,4 @@ def get_embedding_model(model: Optional[str] = None) -> OpenAIEmbeddings:
     use_model = model or settings.embedding_model
     return OpenAIEmbeddings(
         model=use_model,
-        api_key=settings.openai_api_key,
     )
-

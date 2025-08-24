@@ -8,7 +8,6 @@ from chromadb.utils import embedding_functions
 from pypdf import PdfReader
 
 from app.config import settings
-from app.ai.llm import get_embedding_model
 
 
 def _read_text_from_file(path: str) -> str:
@@ -46,12 +45,22 @@ def _chunk_text(text: str, chunk_size: int = 1200, overlap: int = 150) -> List[s
 def _get_collection():
     os.makedirs(settings.rag_persist_dir, exist_ok=True)
     client = chromadb.PersistentClient(path=settings.rag_persist_dir)
-    # Using OpenAI embeddings via langchain-openai under the hood
-    embed = embedding_functions.OpenAIEmbeddingFunction(
-        api_key=settings.openai_api_key,
-        model_name=settings.embedding_model,
-    )
-    col = client.get_or_create_collection("kb", embedding_function=embed)
+    # Prefer OpenAI embeddings; fallback to sentence-transformers if no key
+    if settings.openai_api_key:
+        embed = embedding_functions.OpenAIEmbeddingFunction(
+            api_key=settings.openai_api_key,
+            model_name=settings.embedding_model,
+        )
+    else:
+        # Local embedding to allow offline testing (downloads model on first use)
+        try:
+            embed = embedding_functions.SentenceTransformerEmbeddingFunction(
+                model_name="sentence-transformers/all-MiniLM-L6-v2"
+            )
+        except Exception:
+            # Last resort: DefaultEmbeddingFunction (very basic)
+            embed = embedding_functions.DefaultEmbeddingFunction()
+    col = client.get_or_create_collection("knowledge_base", embedding_function=embed)
     return col
 
 
@@ -114,4 +123,3 @@ def search_kb(query: str, top_k: int = 3) -> List[dict]:
             "path": (m or {}).get("path"),
         })
     return out
-

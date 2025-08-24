@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     ai_model: str = "gpt-5"
     openai_api_key: Optional[str] = None
     embedding_model: str = "text-embedding-3-small"
-    ai_temperature: float = 0.2
+    ai_temperature: float = 1.0
     ai_max_tokens: int = 1000
 
     # Internal simulation API (stubbed if not set)
