@@ -2,12 +2,15 @@ import pandas as pd
 from sqlalchemy.orm import Session
 from app.models.port import Port
 from app.database import SessionLocal, Base, engine
-
+import os
 # Step 1: 테이블 생성 (처음 한 번만 실행되도록)
 Base.metadata.create_all(bind=engine)
 
 # Step 2: CSV 파일 읽기
-df = pd.read_csv("Port_DB.csv", encoding="cp949")  # 인코딩에 따라 cp949도 고려
+csv_path = os.environ.get("PORT_DB_CSV_PATH", "Port_DB.csv")
+if not os.path.isfile(csv_path):
+    raise FileNotFoundError(f"CSV file not found: {csv_path}")
+df = pd.read_csv(csv_path, encoding="cp949")  # 인코딩에 따라 cp949도 고려
 
 # Step 3: DB 세션 시작
 db: Session = SessionLocal()
