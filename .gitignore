@@ -145,9 +145,21 @@ Thumbs.db
 local.db
 test.db
 
-# Environment files (except examples)
+# Environment files (except example templates)
 .env
 .env.local
+env.*
+!env.example
+!.env.example
+
+# RAG/KB and reports (keep placeholders only)
+kb/*
+!kb/.gitkeep
+reports/*
+!reports/.gitkeep
+
+# AI vector store data
+data/
 
 # Backup files
 requirements_backup.txt
@@ -180,7 +192,8 @@ env/
 venv/
 ENV/
 env.bak/
-venv.bak/
+feat/ai
+venv.bak/ 
 
 # Project-specific ignores
 =*
