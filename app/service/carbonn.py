@@ -1,21 +1,23 @@
-#탄소 배출량 모델
-def calculate_fuel_consumption(sfoc_g_per_kwh: float, k: float, distance_nm: float, speed_knots: float) -> float:
-    """
-    프로펠러 법칙 기반 연료소모량 계산 (ton)
-    """
-    fuel_tons = (sfoc_g_per_kwh * k * distance_nm * (speed_knots ** 2)) / 1_000_000
-    return fuel_tons
+def fuel_consumption_ton_nm(
+    sfoc_g_per_kwh: float,
+    distance_nm: float,
+    speed_kn: float,
+    alpha: float = 1.0,
+) -> float:
+    """FC[ton] = (SFOC * α * D_nm * v_kn^2) / 1e6"""
+    return (sfoc_g_per_kwh * alpha * distance_nm * (speed_kn ** 2)) / 1_000_000
 
-def estimate_rfc(fuel_consumption_ton: float, reserve_ratio: float = 0.05) -> float:
+def emission_intensity_kg_per_teu_km_knots(
+    sfoc_g_per_kwh: float,
+    speed_kn: float,
+    teu_loaded: float,
+    ef_ton_per_ton: float,
+    reserve_ratio: float = 0.05,
+    alpha: float = 1.0,
+) -> float:
     """
-    연료 잔존량 (RFC) 계산
+    EI = [EF*(1-r)*SFOC*α*v_kn^2] / [1852 * TEU_loaded]
     """
-    return fuel_consumption_ton * reserve_ratio
-
-def calculate_co2_emission(fc_ton: float, ef: float, reserve_ratio: float = 0.05) -> float:
-    """
-    탄소배출량 계산 (ton)
-    - ef: Emission Factor (ton CO2 / ton fuel), HFO 기준 3.114
-    """
-    rfc = estimate_rfc(fc_ton, reserve_ratio)
-    return ef * (fc_ton - rfc)
+    if teu_loaded <= 0:
+        raise ValueError("teu_loaded > 0 필요")
+    return (ef_ton_per_ton * (1 - reserve_ratio) * sfoc_g_per_kwh * alpha * (speed_kn ** 2)) / (1852.0 * teu_loaded)
