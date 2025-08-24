@@ -192,4 +192,10 @@ env/
 venv/
 ENV/
 env.bak/
+feat/ai
 venv.bak/ 
+
+# Project-specific ignores
+=*
+map.html
+app/models/geo/output/

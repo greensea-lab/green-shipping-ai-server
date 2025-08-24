@@ -1,3 +1,4 @@
+feat/ai
 # Green Shipping AI Server
 
 🚢 **FastAPI 기반의 백엔드 서버 프로젝트**
@@ -417,3 +418,6 @@ make help     # 사용 가능한 명령어 확인
 ---
 
 🎉 **설정 완료!** 이제 FastAPI 개발을 시작하세요!
+=======
+# GreenShipping 최단거리 초기모델 🚢
+develop
