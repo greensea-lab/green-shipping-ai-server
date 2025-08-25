@@ -100,7 +100,18 @@ def ai_chat(req: ChatRequest, _: bool = Depends(require_internal_token)):
             {"role": "user", "content": user_prompt},
         ]
         out = llm.invoke(messages)
-        answer_text = out.content if hasattr(out, "content") else str(out)
+        # Ensure answer_text is always a string
+        if hasattr(out, "content"):
+            content = out.content
+            if isinstance(content, str):
+                answer_text = content
+            elif isinstance(content, list):
+                # Convert list to string representation
+                answer_text = str(content)
+            else:
+                answer_text = str(content)
+        else:
+            answer_text = str(out)
 
     return ChatResponse(
         answer=answer_text,
@@ -152,8 +163,18 @@ def ai_report(req: ReportRequest, _: bool = Depends(require_internal_token)):
             f"Create a 2-3 sentence executive summary of the ESG report titled '{req.title}'.\n"
             f"Focus on CO2 reduction and time impact across {len(req.scenarios)} scenarios."
         )
-        summary = llm.invoke([{ "role": "system", "content": "You summarize reports succinctly."},
-                              { "role": "user", "content": summary_prompt }]).content
+        llm_result = llm.invoke([{ "role": "system", "content": "You summarize reports succinctly."},
+                                 { "role": "user", "content": summary_prompt }])
+        
+        # Ensure summary is always a string
+        if hasattr(llm_result, "content"):
+            content = llm_result.content
+            if isinstance(content, str):
+                summary = content
+            else:
+                summary = str(content)
+        else:
+            summary = str(llm_result)
 
     return ReportResponse(report_path=path, summary=summary)
 
