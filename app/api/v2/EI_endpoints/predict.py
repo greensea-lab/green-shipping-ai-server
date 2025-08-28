@@ -1,4 +1,4 @@
-# app/api/v1/endpoints/predict.py
+# app/api/v2/endpoints/predict.py
 from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, validator
