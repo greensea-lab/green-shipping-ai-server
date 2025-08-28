@@ -28,7 +28,12 @@ PY
 2) 실행 방법
 
 2-1. 경로 계산 (A* 기반)
+**CSV로 실행 시**
 .venv/Scripts/python app/models/geo/geo_models/route.py
+**db 조회로 실행 시**
+python -m app.models.check_port
+USE_DB=1 python -m app.models.geo.geo_models.route -o "출발지명" -d "도착지명"
+
 ➡ 콘솔에 경로 거리 (km) 가 출력됩니다.
 ➡ 결과 파일:
 app/models/geo/output/route.geojson

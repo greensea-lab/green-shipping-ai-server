@@ -1,5 +1,6 @@
-# .venv/Scripts/python app/models/geo/geo_models/route.py
-#데베로 실행 USE_DB=1 python -m app.models.geo.geo_models.route -o "Da Nang" -d "Sydney"
+#가상환경 활성화: source .venv/Scripts/activate
+#샘플 csv로 실행 : .venv/Scripts/python app/models/geo/geo_models/route.py
+#DB조회로 실행:  USE_DB=1 python -m app.models.geo.geo_models.route -o "출발지명" -d "도착지명"
 """
 거리 최적화 초기구현모델: 격자 + A* (빠르고 단순,항상 경로 산출)
 - 노드는 연안 버퍼로만 필터링 (간단/빠름)
