@@ -13,6 +13,11 @@ class ChatRequest(BaseModel):
     k: Optional[float] = None
     vessel_type: Optional[str] = None
     language: str = Field(default="ko", description="응답 언어(예: ko, en, ja)")
+    # 항로 기반 EI 예측용 (옵션)
+    origin: Optional[str] = Field(None, description="출발항")
+    dest: Optional[str] = Field(None, description="도착항")
+    teu_loaded: Optional[float] = Field(None, description="적재량(TEU)")
+    fuel: Optional[str] = Field(None, description="연료(HFO/LFO/MDO/MGO/LNG)")
 
 
 class Metrics(BaseModel):
@@ -27,6 +32,16 @@ class Metrics(BaseModel):
     time_increase_pct: Optional[float] = None
     assumptions: Optional[List[str]] = None
     notes: Optional[str] = None
+    # 항로 기반 EI 결과(옵션)
+    origin: Optional[str] = None
+    dest: Optional[str] = None
+    fuel: Optional[str] = None
+    teu_loaded: Optional[float] = None
+    route_distance_nm: Optional[float] = None
+    route_distance_km: Optional[float] = None
+    ei_kg_per_teu_km: Optional[float] = None
+    co2_ton: Optional[float] = None
+    fc_ton: Optional[float] = None
 
 
 class Citation(BaseModel):
@@ -49,6 +64,11 @@ class Scenario(BaseModel):
     sfoc_g_per_kwh: Optional[float] = None
     k: Optional[float] = None
     vessel_type: Optional[str] = None
+    # (선택) 항로 기반 EI 시나리오 입력
+    origin: Optional[str] = None
+    dest: Optional[str] = None
+    teu_loaded: Optional[float] = None
+    fuel: Optional[str] = None
 
 
 class ReportRequest(BaseModel):
@@ -60,4 +80,3 @@ class ReportRequest(BaseModel):
 class ReportResponse(BaseModel):
     report_path: str
     summary: Optional[str] = None
-

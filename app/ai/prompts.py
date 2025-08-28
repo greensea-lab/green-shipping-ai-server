@@ -26,6 +26,16 @@ def build_user_prompt(language: str,
             f"- Time delta (hours / %): {metrics.get('time_delta_hours')} / {metrics.get('time_increase_pct')}",
             "",
         ]
+        # EI route-based metrics, when present
+        if metrics.get('ei_kg_per_teu_km') is not None or metrics.get('route_distance_nm') is not None:
+            lines += [
+                "EI route-based metrics:",
+                f"- Route: {metrics.get('origin')} -> {metrics.get('dest')} (fuel={metrics.get('fuel')}, TEU={metrics.get('teu_loaded')})",
+                f"- Distance: {metrics.get('route_distance_nm')} nm / {metrics.get('route_distance_km')} km",
+                f"- EI (kg/TEU·km): {metrics.get('ei_kg_per_teu_km')}",
+                f"- CO2 (ton): {metrics.get('co2_ton')} | Fuel (ton): {metrics.get('fc_ton')}",
+                "",
+            ]
     if citations:
         lines.append("Knowledge base citations (top hits):")
         for c in citations:
@@ -36,4 +46,3 @@ def build_user_prompt(language: str,
         "quantifies CO2 savings and time impact, and references sources if present."
     )
     return "\n".join(lines)
-

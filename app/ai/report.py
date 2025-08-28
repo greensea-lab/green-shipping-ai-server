@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 from datetime import datetime
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from xhtml2pdf import pisa
@@ -32,6 +32,7 @@ def generate_esg_report_pdf(
     language: str = "ko",
     reports_dir: str = "reports",
     templates_dir: str = "app/ai/templates",
+    ei_results: Optional[List[Dict[str, Any]]] = None,
 ) -> str:
     """Render ESG report to PDF and return file path."""
     now = datetime.now()
@@ -45,7 +46,7 @@ def generate_esg_report_pdf(
         "generated_at": now.strftime("%Y-%m-%d %H:%M"),
         "scenarios": scenarios,
         "results": results,
+        "ei_results": ei_results or [],
     }
     html = _render_html(templates_dir, "esg_report.html.j2", context)
     return _save_pdf_from_html(html, out_path)
-
