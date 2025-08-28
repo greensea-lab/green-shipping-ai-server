@@ -10,3 +10,5 @@ for port in ports:
     print(f"{port.id}: {port.english_name} ({port.korean_name}) - {port.latitude}, {port.longitude}")
 
 db.close()
+
+# python -m app.models.check_port
