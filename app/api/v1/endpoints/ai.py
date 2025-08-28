@@ -10,6 +10,7 @@ from app.ai.sim_adapter import SimAdapter, SpeedChangeInput
 from app.ai.kb import ingest_kb, search_kb
 from app.ai.prompts import SYSTEM_PROMPT, build_user_prompt
 from app.ai.report import generate_esg_report_pdf
+from app.ai.ei_adapter import predict_ei_metrics
 from app.schemas.ai import (
     ChatRequest, ChatResponse, Metrics, Citation,
     ReportRequest, ReportResponse
@@ -47,6 +48,18 @@ def ai_chat(req: ChatRequest, _: bool = Depends(require_internal_token)):
         )
         metrics_obj = Metrics(**res.__dict__)
         assumptions = res.assumptions or []
+
+    # Optional EI prediction (route-based)
+    if req.origin and req.dest and req.teu_loaded and req.fuel:
+        ei = predict_ei_metrics(req.origin, req.dest, float(req.teu_loaded), str(req.fuel))
+        # Merge into Metrics (Pydantic v2)
+        base = metrics_obj.model_dump() if metrics_obj else {}
+        allowed = set(getattr(Metrics, 'model_fields', {}).keys())
+        base.update({k: v for k, v in ei.items() if k in allowed})
+        # preserve assumptions/notes
+        if ei.get("notes"):
+            base["notes"] = (base.get("notes") + "; " + ei["notes"]) if base.get("notes") else ei["notes"]
+        metrics_obj = Metrics(**base)
 
     # KB lookup (may return empty list if nothing ingested)
     citations_raw = search_kb(req.message, top_k=3)
@@ -93,7 +106,7 @@ def ai_chat(req: ChatRequest, _: bool = Depends(require_internal_token)):
             answer_text = "\n".join(parts)
     else:
         llm = get_chat_model()
-        metrics_dict = metrics_obj.dict() if metrics_obj else None
+        metrics_dict = metrics_obj.model_dump() if metrics_obj else None
         user_prompt = build_user_prompt(req.language, req.message, metrics_dict, citations_raw)
         messages = [
             {"role": "system", "content": SYSTEM_PROMPT},
@@ -114,7 +127,8 @@ def ai_chat(req: ChatRequest, _: bool = Depends(require_internal_token)):
 def ai_report(req: ReportRequest, _: bool = Depends(require_internal_token)):
     # Run simulation per scenario
     sim = SimAdapter()
-    results = []
+    results = []  # speed-change results
+    ei_results = []  # optional EI results per scenario
     for s in req.scenarios:
         res = sim.simulate_speed_change(
             SpeedChangeInput(
@@ -128,9 +142,15 @@ def ai_report(req: ReportRequest, _: bool = Depends(require_internal_token)):
         )
         results.append(res.__dict__)
 
+        # If route-based fields present, attach EI results too
+        if s.origin and s.dest and s.teu_loaded and s.fuel:
+            ei = predict_ei_metrics(s.origin, s.dest, float(s.teu_loaded), str(s.fuel))
+            ei_results.append(ei)
+
     path = generate_esg_report_pdf(
-        scenarios=[s.dict() for s in req.scenarios],
+        scenarios=[s.model_dump() for s in req.scenarios],
         results=results,
+        ei_results=ei_results if ei_results else None,
         title=req.title,
         language=req.language,
     )
