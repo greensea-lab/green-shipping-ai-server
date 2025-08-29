@@ -1,3 +1,4 @@
+feat/ai
 # Green Shipping AI Server
 
 🚢 **FastAPI 기반의 백엔드 서버 프로젝트**
@@ -352,6 +353,138 @@ make clean    # 가상환경 삭제
 make help     # 사용 가능한 명령어 확인
 ```
 
+## 🤖 AI/LLM 사용 가이드(내부 전용)
+
+프런트에서 내부 AI/LLM 기능을 호출해 답변과 수치 요약(옵션), 보고서 PDF를 생성할 수 있습니다. v1 API만 사용하면 되고, v2(EI 전용)는 직접 호출하지 않습니다.
+
+### 구조 요약
+- v1: 메인 앱에 마운트(`/api/v1`) — 채팅/보고서/KB(RAG)
+- v2: 항로 기반 EI 예측 전용. v1이 내부 모듈로 EI를 호출해 사용
+
+### 인증
+- 헤더: `X-Internal-Token: <INTERNAL_API_TOKEN>` (필수)
+- `.env` 예: `INTERNAL_API_TOKEN=your-internal-token`
+
+### 환경 변수
+- LLM/RAG
+  - `OPENAI_API_KEY`: OpenAI 키(없으면 기본 문장형 답변으로 폴백)
+  - `AI_MODEL`(기본: `gpt-5`), `AI_TEMPERATURE`(기본: 1.0), `EMBEDDING_MODEL`
+  - `RAG_PERSIST_DIR`: 벡터DB 저장 경로(기본 `./data/chroma`)
+- EI(항로 기반, 선택)
+  - `PORT_DB`: 포트 좌표 CSV 경로, `PORT_DB_ENCODING`(옵션)
+  - `GRID_KM`, `COAST_KM`: 항로 그래프 파라미터
+  - `EI_MODEL_PATH`: 학습 모델 `ei_residual.joblib` 경로
+
+### 엔드포인트
+- 채팅: `POST /api/v1/ai/chat`
+  - 필수: `message`
+  - 선택(시뮬): `distance_nm`, `base_speed_knots`, `new_speed_knots` (+ `sfoc_g_per_kwh`, `k`, `vessel_type`)
+  - 선택(EI): `origin`, `dest`, `teu_loaded`, `fuel`(HFO/LFO/MDO/MGO/LNG)
+  - 둘 다 제공하면 두 세트의 지표가 함께 반영됩니다.
+- 보고서 PDF: `POST /api/v1/ai/report`
+  - `scenarios`: 각 항목에 시뮬 3항목(필수) + EI 4항목(선택)
+  - 응답: `report_path`(PDF 경로), `summary`
+- KB(RAG)
+  - 인제스트: `POST /api/v1/ai/kb/ingest` (본문 경로 없으면 `kb/` 폴더 스캔)
+  - 검색: `GET /api/v1/ai/kb/search?query=...&top_k=3`
+
+### 요청/응답 스키마(요약)
+- ChatRequest: `message`, `language(ko 기본)`, 시뮬/항로 입력(선택)
+- ChatResponse: `answer` + `metrics`
+  - 시뮬: `time_base_hours`, `time_new_hours`, `time_delta_hours`, `co2_base_ton`, `co2_new_ton` 등
+  - EI: `origin/dest/fuel/teu_loaded`, `route_distance_nm/km`, `ei_kg_per_teu_km`, `co2_ton`, `fc_ton`, `notes`
+- ReportRequest → ReportResponse(`report_path`, `summary`)
+
+### 사용 예시
+- Chat — 최소
+```bash
+curl -X POST http://localhost:8000/api/v1/ai/chat \
+  -H 'Content-Type: application/json' \
+  -H 'X-Internal-Token: <TOKEN>' \
+  -d '{
+    "message":"선박 탈탄소 사례 알려줘",
+    "language":"ko"
+  }'
+```
+
+- Chat — 속도 변경(시뮬)
+```bash
+curl -X POST http://localhost:8000/api/v1/ai/chat \
+  -H 'Content-Type: application/json' -H 'X-Internal-Token: <TOKEN>' \
+  -d '{
+    "message":"속력 15→12kn 변경 시 영향?",
+    "distance_nm":1200,
+    "base_speed_knots":15,
+    "new_speed_knots":12,
+    "language":"ko"
+  }'
+```
+
+- Chat — 항로 기반 EI
+```bash
+curl -X POST http://localhost:8000/api/v1/ai/chat \
+  -H 'Content-Type: application/json' -H 'X-Internal-Token: <TOKEN>' \
+  -d '{
+    "message":"부산→LA 8000TEU HFO EI/CO2?",
+    "origin":"BUSAN",
+    "dest":"LOS ANGELES",
+    "teu_loaded":8000,
+    "fuel":"HFO",
+    "language":"ko"
+  }'
+```
+
+- Chat — 결합(시뮬 + EI)
+```bash
+curl -X POST http://localhost:8000/api/v1/ai/chat \
+  -H 'Content-Type: application/json' -H 'X-Internal-Token: <TOKEN>' \
+  -d '{
+    "message":"속도 15→12kn, 부산→LA 8000TEU HFO 기준 영향?",
+    "distance_nm":1200,
+    "base_speed_knots":15,
+    "new_speed_knots":12,
+    "origin":"BUSAN",
+    "dest":"LOS ANGELES",
+    "teu_loaded":8000,
+    "fuel":"HFO",
+    "language":"ko"
+  }'
+```
+
+- Report — PDF 생성(옵션: EI 포함)
+```bash
+curl -X POST http://localhost:8000/api/v1/ai/report \
+  -H 'Content-Type: application/json' -H 'X-Internal-Token: <TOKEN>' \
+  -d '{
+    "title":"ESG 리포트",
+    "language":"ko",
+    "scenarios":[{
+      "distance_nm":1200,
+      "base_speed_knots":15,
+      "new_speed_knots":12,
+      "origin":"BUSAN",
+      "dest":"LOS ANGELES",
+      "teu_loaded":8000,
+      "fuel":"HFO"
+    }]
+  }'
+```
+
+### 테스트(로컬)
+- 서버 없이 빠른 테스트: `venv/bin/python scripts/test_llm_api.py`
+  - Chat(시뮬), Chat(EI), Report 순서로 호출
+  - `OPENAI_API_KEY` 없으면 기본 답변으로 폴백
+- 서버로 확인: `make local` 또는 `./run_local.sh` 실행 후, 위 curl 예시 사용
+
+### 오류/폴백 동작
+- LLM 키 없음 → 기본 문장형 답변 + 가능한 수치 요약 제공
+- EI 환경 미구성(PORT_DB/EI_MODEL_PATH 미배포) → `metrics.notes`에 사유 표기, 관련 수치가 비어 있을 수 있음
+- 인증 실패 → 403 반환
+
+### 보안 유의사항
+- 내부 토큰은 백엔드 측에서 주입하고, 브라우저에 노출하지 않도록 합니다.
+- v2(EI 전용)는 직접 호출하지 말고 v1만 사용하세요(내부에서 자동 연동).
+
 ## 🆘 도움이 필요하시다면
 
 1. **에러 메시지를 복사해서 검색해보세요**
@@ -362,3 +495,6 @@ make help     # 사용 가능한 명령어 확인
 ---
 
 🎉 **설정 완료!** 이제 FastAPI 개발을 시작하세요!
+=======
+# GreenShipping 최단거리 초기모델 🚢
+develop

@@ -31,6 +31,7 @@ for _, row in df.iterrows():
         Port.english_name == row["PORT_NAME"],
         Port.latitude == float(row["latitude"]),
         Port.longitude == float(row["longitude"])
+
     ).first()
     if exists:
         continue
@@ -42,9 +43,12 @@ for _, row in df.iterrows():
         country_eng=row.get("COUNTRY_NAME"),
         latitude=float(row["latitude"]),
         longitude=float(row["longitude"])
+
+
     )
     db.add(port)
 
 # Step 5: 커밋 + 세션 종료
 db.commit()
 db.close()
+

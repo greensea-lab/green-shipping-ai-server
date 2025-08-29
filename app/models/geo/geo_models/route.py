@@ -1,6 +1,8 @@
+
 #가상환경 활성화: source .venv/Scripts/activate
 #샘플 csv로 실행 : .venv/Scripts/python app/models/geo/geo_models/route.py
 #DB조회로 실행:  USE_DB=1 python -m app.models.geo.geo_models.route -o "출발지명" -d "도착지명"
+
 """
 거리 최적화 초기구현모델: 격자 + A* (빠르고 단순,항상 경로 산출)
 - 노드는 연안 버퍼로만 필터링 (간단/빠름)
@@ -72,7 +74,6 @@ def load_ports(path) -> gpd.GeoDataFrame:
                             "longitude":"lon","long":"lon","lng":"lon","x":"lon"})
     return gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df["lon"], df["lat"]), crs=CRS_WGS84)
 
-
 # --- DB에서 O/D 좌표 불러오기 ---
 def load_od_from_db(origin_name: str, dest_name: str) -> gpd.GeoDataFrame:
     import pandas as pd
@@ -98,7 +99,6 @@ def load_od_from_db(origin_name: str, dest_name: str) -> gpd.GeoDataFrame:
         ]
     )
     return gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df["lon"], df["lat"]), crs=CRS_WGS84)
-
 
 #name과 일치하는 항만 한 개 선택 , 없으면 에러
 def pick_od(ports, name: str):
@@ -311,6 +311,7 @@ def run_pipeline():
     import time
     t0 = time.time()
     ensure_dirs()
+
     if USE_DB:
         od = load_od_from_db(ORIGIN_NAME, DEST_NAME)  # DB에서 (name,lat,lon) → GeoDataFrame(WGS84)
     else:
@@ -318,6 +319,7 @@ def run_pipeline():
         o = pick_od(ports, ORIGIN_NAME)
         d = pick_od(ports, DEST_NAME)
         od = gpd.GeoDataFrame([o, d], geometry="geometry", crs=CRS_WGS84)
+
     land_union = load_land_union(CRS_METER)
 
     # 단계 1: 러프 경로(여러 폴백 포함)
@@ -426,5 +428,4 @@ if __name__ == "__main__":
         USE_DB = args.use_db or (os.getenv("USE_DB", "").lower() in ("1", "true", "yes"))
     except Exception:
         pass
-
     run_pipeline()
