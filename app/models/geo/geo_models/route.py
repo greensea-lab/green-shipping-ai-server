@@ -1,4 +1,8 @@
-# .venv/Scripts/python app/models/geo/geo_models/route.py
+
+#가상환경 활성화: source .venv/Scripts/activate
+#샘플 csv로 실행 : .venv/Scripts/python app/models/geo/geo_models/route.py
+#DB조회로 실행:  USE_DB=1 python -m app.models.geo.geo_models.route -o "출발지명" -d "도착지명"
+
 """
 거리 최적화 초기구현모델: 격자 + A* (빠르고 단순,항상 경로 산출)
 - 노드는 연안 버퍼로만 필터링 (간단/빠름)
@@ -21,8 +25,9 @@ from pyproj import Geod
 
 
 # ---------------- 설정 ----------------
-ORIGIN_NAME = "Sydney"     # CSV의 name과 일치하도록 입력
-DEST_NAME   = "Auckland"
+USE_DB = False  # ← 추가: 기본은 CSV, --use-db 주면 True로 바뀜
+ORIGIN_NAME = "Pusan"     # CSV의 name과 일치하도록 입력
+DEST_NAME   = "Sydney"
 
 # 기본 격자/버퍼
 GRID_SPACING_KM = 60       # 기존 격자 간격(호환성 유지용)
@@ -67,6 +72,32 @@ def load_ports(path) -> gpd.GeoDataFrame:
     df = df.rename(columns={"port":"name","portname":"name",
                             "latitude":"lat","y":"lat",
                             "longitude":"lon","long":"lon","lng":"lon","x":"lon"})
+    return gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df["lon"], df["lat"]), crs=CRS_WGS84)
+
+# --- DB에서 O/D 좌표 불러오기 ---
+def load_od_from_db(origin_name: str, dest_name: str) -> gpd.GeoDataFrame:
+    import pandas as pd
+    from app.database import SessionLocal
+    from app.models.port_queries import get_lonlat
+
+    db = SessionLocal()
+    try:
+        o = get_lonlat(db, origin_name)  # (lon, lat) or None
+        d = get_lonlat(db, dest_name)
+    finally:
+        db.close()
+
+    if not o:
+        raise ValueError(f"Origin port not found in DB: '{origin_name}'")
+    if not d:
+        raise ValueError(f"Destination port not found in DB: '{dest_name}'")
+
+    df = pd.DataFrame(
+        [
+            {"name": origin_name, "lat": float(o[1]), "lon": float(o[0])},
+            {"name": dest_name,   "lat": float(d[1]), "lon": float(d[0])},
+        ]
+    )
     return gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df["lon"], df["lat"]), crs=CRS_WGS84)
 
 #name과 일치하는 항만 한 개 선택 , 없으면 에러
@@ -280,10 +311,14 @@ def run_pipeline():
     import time
     t0 = time.time()
     ensure_dirs()
-    ports = load_ports(PORTS_CSV)
-    o = pick_od(ports, ORIGIN_NAME)
-    d = pick_od(ports, DEST_NAME)
-    od = gpd.GeoDataFrame([o, d], geometry="geometry", crs=CRS_WGS84)
+
+    if USE_DB:
+        od = load_od_from_db(ORIGIN_NAME, DEST_NAME)  # DB에서 (name,lat,lon) → GeoDataFrame(WGS84)
+    else:
+        ports = load_ports(PORTS_CSV)  # 기존 CSV 로직 유지
+        o = pick_od(ports, ORIGIN_NAME)
+        d = pick_od(ports, DEST_NAME)
+        od = gpd.GeoDataFrame([o, d], geometry="geometry", crs=CRS_WGS84)
 
     land_union = load_land_union(CRS_METER)
 
@@ -376,17 +411,21 @@ def run_pipeline():
     print(f"⏱️ Coarse phase: {t_coarse1 - t_coarse0:.2f}s, Fine phase: {t_fine1 - t_fine0:.2f}s, Total: {time.time() - t0:.2f}s")
 
 if __name__ == "__main__":
-    # 간단한 CLI 인자 처리: --origin/-o, --dest/-d
+    # 간단한 CLI 인자 처리: --origin/-o, --dest/-d, --use-db
     try:
-        import argparse
+        import argparse, os
         parser = argparse.ArgumentParser(description="Sea route finder (coarse-to-fine A*)")
-        parser.add_argument("-o", "--origin", help="Origin port name (as in CSV)")
-        parser.add_argument("-d", "--dest", help="Destination port name (as in CSV)")
+        parser.add_argument("-o", "--origin", help="Origin port name (CSV or DB)")
+        parser.add_argument("-d", "--dest",   help="Destination port name (CSV or DB)")
+        parser.add_argument("--use-db", action="store_true", help="Use DB instead of CSV")
         args = parser.parse_args()
+
+        # 전역 변수 업데이트
         if args.origin:
             ORIGIN_NAME = args.origin
         if args.dest:
             DEST_NAME = args.dest
+        USE_DB = args.use_db or (os.getenv("USE_DB", "").lower() in ("1", "true", "yes"))
     except Exception:
         pass
     run_pipeline()
