@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  # MySQL 데이터베이스
+  db:
+    image: mysql:8.0
+    container_name: green-shipping-db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-green_shipping_db}
+      MYSQL_USER: ${MYSQL_USER:-green_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-green_password}
+    ports:
+      - "3306:3306"
+    volumes:
+      # 데이터 영속성 (Docker 볼륨 사용)
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root_password}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - green-shipping-network
+
+  # FastAPI 애플리케이션
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: green-shipping-app
+    ports:
+      - "8000:8000"
+    environment:
+      # DB 연결 (docker-compose 네트워크에서 'db' 호스트명 사용)
+      - DATABASE_URL=${DATABASE_URL:-mysql+pymysql://green_user:green_password@db:3306/green_shipping_db}
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-in-production}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - INTERNAL_API_TOKEN=${INTERNAL_API_TOKEN:-}
+      - HOST=0.0.0.0
+      - PORT=8000
+      - DEBUG=${DEBUG:-False}
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - AI_MODEL=${AI_MODEL:-gpt-4}
+      - AI_TEMPERATURE=${AI_TEMPERATURE:-1.0}
+      - AI_MAX_TOKENS=${AI_MAX_TOKENS:-1000}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-text-embedding-3-small}
+      - RAG_PERSIST_DIR=${RAG_PERSIST_DIR:-/app/data/chroma}
+    env_file:
+      - .env
+    volumes:
+      # 데이터 영속성
+      - ./data:/app/data
+      - ./reports:/app/reports
+      - ./kb:/app/kb
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - green-shipping-network
+
+# 네트워크 정의
+networks:
+  green-shipping-network:
+    driver: bridge
+
+# 볼륨 정의 (데이터 영속성)
+volumes:
+  mysql_data:
+    driver: local
