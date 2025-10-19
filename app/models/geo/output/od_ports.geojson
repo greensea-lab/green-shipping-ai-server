@@ -1,0 +1,9 @@
+{
+"type": "FeatureCollection",
+"name": "od_ports",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "name": "dalian" }, "geometry": { "type": "Point", "coordinates": [ 121.666666699999965, 38.91666667 ] } },
+{ "type": "Feature", "properties": { "name": "da nang" }, "geometry": { "type": "Point", "coordinates": [ 108.286762322734518, 16.19489400635636 ] } }
+]
+}

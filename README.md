@@ -1,3 +1,4 @@
+feat/ai
 # Green Shipping AI Server
 
 🚢 **FastAPI 기반의 백엔드 서버 프로젝트**
@@ -484,93 +485,6 @@ curl -X POST http://localhost:8000/api/v1/ai/report \
 - 내부 토큰은 백엔드 측에서 주입하고, 브라우저에 노출하지 않도록 합니다.
 - v2(EI 전용)는 직접 호출하지 말고 v1만 사용하세요(내부에서 자동 연동).
 
-## 🐳 Docker 로컬 테스트
-
-배포 전에 Docker 환경에서 로컬 테스트가 가능합니다.
-
-### 빠른 시작
-
-```bash
-# 환경 변수 설정
-cp env.example .env
-
-# Docker Compose 실행 (앱 + MySQL)
-docker-compose up -d
-
-# 로그 확인
-docker-compose logs -f
-
-# 접속 확인
-curl http://localhost:8000/health
-```
-
-**실행되는 서비스**:
-- ✅ FastAPI 앱 (http://localhost:8000)
-- ✅ MySQL 8.0 (localhost:3306)
-- ✅ 자동 네트워크 연결
-- ✅ 데이터 영속성 (Docker 볼륨)
-
-**유용한 명령어**:
-```bash
-# 로그 확인
-docker-compose logs -f
-
-# 상태 확인
-docker-compose ps
-
-# 중지
-docker-compose down
-
-# 완전 삭제 (데이터 포함)
-docker-compose down -v
-```
-
-## 🚀 AWS EC2 배포 (자동화)
-
-**EC2 + Docker Compose + GitHub Actions**로 완전 자동화 배포
-
-### 빠른 배포 (3단계)
-
-#### 1️⃣ EC2 인스턴스 생성
-- Ubuntu 22.04 LTS
-- t3.small (2GB RAM) 또는 t3.micro (프리티어)
-- 보안 그룹: 22, 80, 443, 8000 포트 열기
-
-#### 2️⃣ 자동 설정 스크립트 실행
-```bash
-# EC2 접속 후
-curl -O https://raw.githubusercontent.com/greensea-lab/green-shipping-ai-server/develop/setup-ec2.sh
-chmod +x setup-ec2.sh
-./setup-ec2.sh
-```
-
-#### 3️⃣ GitHub Actions 설정
-- Repository → Settings → Secrets
-- `EC2_HOST`: EC2 Public IP
-- `EC2_SSH_KEY`: SSH 키 파일 내용
-
-**완료!** 이제 코드 푸시 시 자동 배포됩니다 🎉
-
-### 자동 배포 흐름
-
-```
-코드 푸시 (develop/main)
-  ↓
-GitHub Actions 트리거
-  ↓
-EC2 SSH 접속
-  ↓
-최신 코드 Pull
-  ↓
-Docker 이미지 재빌드
-  ↓
-컨테이너 재시작
-  ↓
-헬스체크
-  ↓
-완료! 🎉
-```
-
 ## 🆘 도움이 필요하시다면
 
 1. **에러 메시지를 복사해서 검색해보세요**
@@ -581,3 +495,6 @@ Docker 이미지 재빌드
 ---
 
 🎉 **설정 완료!** 이제 FastAPI 개발을 시작하세요!
+=======
+# GreenShipping 최단거리 초기모델 🚢
+develop
