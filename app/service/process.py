@@ -1,66 +1,70 @@
-# predict.py (revised)
+# process.py — EI-residual 파이프라인과 호환되도록 수정
 from typing import Dict, Tuple, Optional, Callable
-from app.service.data_set import TrainRow, nm_to_km, estimate_rfc, row_to_features
-from app.service.train_xgb import TrainedFCModel
+from app.service.train_xgb import TrainedEIResidual, predict_from_ei
+from app.service.data_set import nm_to_km  # 필요하면 유지
 
-def predict_fc_co2_ei(
-    model_pack: TrainedFCModel,
-    ports_db: Dict[str, Tuple[float, float]],   # 유지(콜백 내부에서 쓸 수 있음)
-    origin: str,
-    dest: str,
-    teu_loaded: float,
-    fuel: str,
-    *,
-    distance_nm: Optional[float] = None,        # 제공 시 우선 사용
-    distance_km: Optional[float] = None,        # 제공 시 우선 사용
-    distance_provider: Optional[Callable[[str, str], float]] = None  # 항해그래프 콜백(반환: nm)
-) -> Dict[str, float]:
-    """
-    거리 해석 우선순위:
-      1) distance_nm 인자
-      2) distance_km 인자
-      3) distance_provider(origin, dest)  # 항해그래프 필수
-      -> 그 외(미제공) 에러 발생 (대권거리 사용 금지)
-    """
-    if teu_loaded <= 0:
-        raise ValueError("teu_loaded > 0 이어야 합니다.")
-    fuel_up = fuel.strip().upper()
+# (origin, dest) -> nm
+DistanceProvider = Callable[[str, str], float]
 
-    # --- 거리 결정 (직선거리 사용 금지) ---
+def _provider_from_args(
+    distance_nm: Optional[float],
+    distance_km: Optional[float],
+    fallback: Optional[DistanceProvider],
+) -> DistanceProvider:
+    """
+    인자로 직접 준 거리(distance_nm/km)가 우선이고,
+    없으면 fallback distance_provider를 사용하도록 감싸는 래퍼.
+    """
     if distance_nm is not None:
-        D_nm = float(distance_nm)
-    elif distance_km is not None:
-        D_nm = float(distance_km) / 1.852
-    elif distance_provider is not None:
-        D_nm = float(distance_provider(origin, dest))  # 항해그래프 결과(nm)
-    else:
+        d_nm = float(distance_nm)
+        if d_nm <= 0:
+            raise ValueError(f"유효하지 않은 거리(nm): {d_nm}")
+        return lambda _o, _d: d_nm
+
+    if distance_km is not None:
+        d_km = float(distance_km)
+        if d_km <= 0:
+            raise ValueError(f"유효하지 않은 거리(km): {d_km}")
+        return lambda _o, _d: d_km / 1.852
+
+    if fallback is None:
         raise ValueError(
             "거리 소스가 없습니다. distance_nm 또는 distance_km를 제공하거나 "
             "distance_provider(항해그래프 콜백)를 넘겨주세요."
         )
-    if D_nm <= 0:
-        raise ValueError(f"유효하지 않은 거리(nm): {D_nm}")
-    D_km = nm_to_km(D_nm)
+    return fallback
 
-    # --- 특징 벡터 구성 & FC 예측 ---
-    dummy = TrainRow(D_nm=D_nm, fuel=fuel_up, teu_loaded=teu_loaded, fc_obs_ton=0.0)
-    x = row_to_features(dummy, model_pack.fuel_vocab, model_pack.use_teu).reshape(1, -1)
-    fc = float(model_pack.model.predict(x)[0])  # ton
+def predict_fc_co2_ei(
+    model_pack: TrainedEIResidual,                # ✅ 변경: TrainedFCModel -> TrainedEIResidual
+    ports_db: Dict[str, Tuple[float, float]],     # 유지(호출부 호환용, 내부에선 사용하지 않음)
+    origin: str,
+    dest: str,
+    teu_loaded: float,
+    fuel: str,                                    # EI-Residual에서는 fuel 미사용(남겨도 무방)
+    *,
+    distance_nm: Optional[float] = None,
+    distance_km: Optional[float] = None,
+    distance_provider: Optional[DistanceProvider] = None
+) -> Dict[str, float]:
+    """
+    EI-Residual 모델을 사용한 일관된 예측 함수.
+    - 거리 우선순위: distance_nm > distance_km > distance_provider
+    - 내부에서 predict_from_ei 호출
+    """
+    dp = _provider_from_args(distance_nm, distance_km, distance_provider)
 
-    # --- CO2 ---
-    if fuel_up not in model_pack.ef_table:
-        raise KeyError(f"EF 미정의 연료: '{fuel_up}'")
-    ef = model_pack.ef_table[fuel_up]
-    rfc = estimate_rfc(fc, model_pack.reserve_ratio)
-    co2_ton = ef * max(0.0, fc - rfc)
+    out = predict_from_ei(
+        pack=model_pack,
+        origin=origin,
+        dest=dest,
+        teu_loaded=float(teu_loaded),
+        distance_provider=dp
+    )
+    # out: {"distance_km","ei_kg_per_teu_km","co2_ton","fc_ton"}
 
-    # --- EI ---
-    ei = (co2_ton * 1000.0) / (D_km * teu_loaded)
-
-    return {
-        "distance_nm": D_nm,
-        "distance_km": D_km,
-        "fc_ton": fc,
-        "co2_ton": co2_ton,
-        "ei_kg_per_teu_km": ei
-    }
+    # 필요하면 distance_nm도 함께 반환(호환성용)
+    d_nm = (distance_nm if distance_nm is not None
+            else (distance_km / 1.852 if distance_km is not None
+                  else out["distance_km"] / 1.852))
+    out["distance_nm"] = float(d_nm)
+    return out
